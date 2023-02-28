@@ -307,6 +307,12 @@ markup_calendar_year.add(item1, item2, item3, item4, item5, item6, item7, item8,
 
 @bot.message_handler(commands=['start'])
 def process_start(message):
+    bot.send_message(message.chat.id, "Привет!")
+    dbworker.set_state(message.chat.id, config.States.S_ENTER_lang.value)
+    pre_ask_language(message)
+
+@bot.message_handler(func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_ENTER_lang.value)    
+def pre_ask_language(message):
     markupp = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     btn1 = types.KeyboardButton('Русский 🇷🇺')
     btn2 = types.KeyboardButton('Oʻzbek tili 🇺🇿')
@@ -314,8 +320,8 @@ def process_start(message):
     bot.send_message(message.chat.id,
                      'Здравствуйте!\nПожалуйста, выберите язык\n\nAssalomu alaykum!\nIltimos, tilni tanlang',
                      reply_markup=markupp)
-    dbworker.set_state(message.chat.id, config.States.S_START.value)
-    bot.register_next_step_handler(message, ask_language)
+    
+    
 
 
 @bot.message_handler(content_types=['text'])
@@ -354,6 +360,8 @@ def ask_language(message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
         btn = types.KeyboardButton(lang_dict['start'][user.lang])
         markup.row(btn)
+        
+        dbworker.set_state(message.chat.id, config.States.S_ENTER_first_text.value)
         between_language_and_about_resume(message)
     except KeyError:
         bot.reply_to(message,
@@ -361,7 +369,7 @@ def ask_language(message):
         bot.register_next_step_handler(message,ask_language)
 
 
-@bot.message_handler(content_types=['text'], func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_ENTER_first_text.value)
+@bot.message_handler(func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_ENTER_first_text.value)  
 def between_language_and_about_resume(message):
     user = user_dict[message.chat.id]
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
@@ -382,7 +390,6 @@ def ask_about_resume(message):
     item2 = types.InlineKeyboardButton(lang_dict['prodoljit'][user.lang], callback_data='Продолжить')
 
     markup_resume.add(item1, item2)
-    dbworker.set_state(message.chat.id, config.States.S_ENTER_first_text.value)
     bot.send_message(message.chat.id, lang_dict['resume_question'][user.lang], reply_markup=markup_resume)
 
 
