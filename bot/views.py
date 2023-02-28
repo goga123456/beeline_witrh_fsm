@@ -361,7 +361,7 @@ def ask_language(message):
         bot.register_next_step_handler(message,ask_language)
 
 
-@bot.message_handler(content_types=['text'])
+@bot.message_handler(content_types=['text'], func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_ENTER_first_text.value)
 def between_language_and_about_resume(message):
     user = user_dict[message.chat.id]
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
